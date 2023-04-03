@@ -5354,7 +5354,7 @@ static PyObject* __Pyx_PyFunction_FastCallNoKw(PyCodeObject *co, PyObject **args
     }
     result = PyEval_EvalFrameEx(f,0);
     ++tstate->recursion_depth;
-    Py_DECREF(f);
+//    Py_DECREF(f);
     --tstate->recursion_depth;
     return result;
 }
