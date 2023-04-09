@@ -99,6 +99,13 @@ cdef class CyClpSimplex:
     #############################################
     # Properties
     #############################################
+    property cyPivot:
+        def __get__(self):
+            return self.cyPivot
+
+    property cyDualPivot:
+        def __get__(self):
+            return self.cyDualPivot
 
     property basicVariables:
         def __get__(self):
@@ -768,10 +775,21 @@ cdef class CyClpSimplex:
         def __set__(self, value):
             self.CppSelf.setInfeasibilityCost(value)
 
+    property sumPrimalInfeasibilities:
+        def __get__(self):
+            return self.CppSelf.sumPrimalInfeasibilities()
 
     property numberPrimalInfeasibilities:
         def __get__(self):
             return self.CppSelf.numberPrimalInfeasibilities()
+
+    property sumDualInfeasibilities:
+        def __get__(self):
+            return self.CppSelf.sumDualInfeasibilities()
+
+    property numberDualInfeasibilities:
+        def __get__(self):
+            return self.CppSelf.numberDualInfeasibilities()
 
     property optimizationDirection:
         def __get__(self):
@@ -901,6 +919,20 @@ cdef class CyClpSimplex:
         Set the variable index ``v`` as the entering variable.
         '''
         self.CppSelf.setSequenceIn(v)
+
+    def sequenceOut(self):
+        '''
+        Return the index of the leaving variable.
+
+        :rtype: int
+        '''
+        return self.CppSelf.sequenceOut()
+
+    def setSequenceOut(self, v):
+        '''
+        Set the variable index ``v`` as the leaving variable.
+        '''
+        self.CppSelf.setSequenceOut(v)
 
 ##    def dualTolerance(self):
 ##        '''

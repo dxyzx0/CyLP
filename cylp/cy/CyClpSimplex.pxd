@@ -147,6 +147,8 @@ cdef extern from "IClpSimplex.hpp":
 
         int sequenceIn()
         void setSequenceIn(int v)
+        int sequenceOut()
+        void setSequenceOut(int v)
 
         double currentDualTolerance()
         double dualTolerance()
@@ -291,7 +293,10 @@ cdef extern from "IClpSimplex.hpp":
         void setInfeasibilityCost(double value)
         double infeasibilityCost()
 
+        double sumPrimalInfeasibilities()
         int numberPrimalInfeasibilities()
+        double sumDualInfeasibilities()
+        int numberDualInfeasibilities()
 
         bint isInteger(int index)
         PyObject* getIntegerInformation()
@@ -322,6 +327,9 @@ cdef class CyClpSimplex:
     #cdef cbcModelExists
     #cdef object pivotMethodObject
     #cdef object isPivotAcceptable_func
+
+    cdef cyPivot(self)
+    cdef cyDualPivot(self)
 
     cpdef int readMps(self, filename, int keepNames=*,
                 int ignoreErrors=*) except *
