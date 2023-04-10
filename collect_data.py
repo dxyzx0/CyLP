@@ -26,7 +26,7 @@ if __name__ == "__main__":
             continue
 
         # FIXME: bug
-        if mps in ("d2q06c.mps", "dfl001.mps"):
+        if mps in ("d2q06c.mps", "dfl001.mps", "bnl1.mps", "bnl2.mps"):
             continue
 
         f = os.path.join(netlib, mps)
