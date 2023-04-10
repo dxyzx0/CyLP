@@ -18,7 +18,7 @@ if __name__ == "__main__":
     # Get the path to a sample mps file
 
     # prefix is output + time stamp as folder name
-    prefix = f"output/{datetime.now().strftime('%Y.%m.%d_%H_%M_%S')}"
+    prefix = f"output/{datetime.now().strftime('%Y.%m.%d_%H:%M:%S')}"
     netlib = "cylp/input/netlib"
     for mps in sorted(os.listdir(netlib)):
         if ".mps" not in mps:
@@ -33,12 +33,20 @@ if __name__ == "__main__":
         for pivot in [
             DantzigPivot,
             PositiveEdgePivot,
-            # LIFOPivot,  # too slow
-            # MostFrequentPivot,  # too slow
+            LIFOPivot,  # too slow
+            MostFrequentPivot,  # too slow
         ]:
             s = CyClpSimplex()
             s.readMps(f)  # Returns 0 if OK
+
+            # set pivot rule
             pt = pivot(s, prefix, mps.split(".")[0])
             s.setPivotMethod(pt)
+
+            # set param
+            s.maxNumIteration = 100000
+
+            # primal simplex
             s.primal()
-            round(s.objectiveValue, 5)
+
+            print(round(s.objectiveValue, 5))
