@@ -5,6 +5,8 @@ from math import floor
 from .PivotPythonBase import PivotPythonBase
 from cylp.cy.CyClpSimplex import VarStatus
 
+from .utils import add_row, init_attr
+
 
 class LIFOPivot(PivotPythonBase):
     '''
@@ -29,16 +31,19 @@ class LIFOPivot(PivotPythonBase):
 
     '''
 
-    def __init__(self, clpModel):
+    def __init__(self, clpModel, prefix, prob_name):
         self.dim = clpModel.nRows + clpModel.nCols
-        self.clpModel = clpModel
+        s = self.clpModel = clpModel
         #self.banList = np.zeros(self.dim, np.int)
         self.banList = []
         self.priorityList = range(self.dim)
 
+        init_attr(self, s, prefix, prob_name)
+
     def pivotColumn(self, updates, spareRow1, spareRow2, spareCol1, spareCol2):
         'Finds the variable with the best reduced cost and returns its index'
         self.updateReducedCosts(updates, spareRow1, spareRow2, spareCol1, spareCol2)
+        add_row(self.clpModel, self.path)
         s = self.clpModel
         rc = s.reducedCosts
         dim = s.nCols + s.nRows

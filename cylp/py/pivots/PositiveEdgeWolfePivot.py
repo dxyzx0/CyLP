@@ -6,12 +6,13 @@ import random
 from math import floor
 from cylp.cy.CyClpSimplex import cydot
 from cylp.py.pivots import PositiveEdgePivot
+from .utils import add_row, init_attr
 
 
 class PositiveEdgeWolfePivot(PositiveEdgePivot):
 
-    def __init__(self, clpModel, bucketSize=1, EPSILON=10 ** (-7)):
-        PositiveEdgePivot.__init__(self, clpModel, bucketSize, EPSILON)
+    def __init__(self, clpModel, prefix, prob_name, bucketSize=1, EPSILON=10 ** (-7)):
+        PositiveEdgePivot.__init__(self, clpModel, prob_name, EPSILON)
         self.banList = []
 
     def pivotColumnFirst(self, updates, spareRow1, spareRow2, spareCol1, spareCol2):

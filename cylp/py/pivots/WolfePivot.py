@@ -5,13 +5,15 @@ except ImportError:   # Python 3 does not have izip use zip
     izip = zip
 import numpy as np
 from .PivotPythonBase import PivotPythonBase
+from .utils import add_row, init_attr
 
 
 class WolfePivot(PivotPythonBase):
 
-    def __init__(self, clpModel, bucketSize=1):
+    def __init__(self, clpModel, prefix, prob_name, bucketSize=1):
         self.dim = clpModel.nConstraints + clpModel.nVariables
-        self.clpModel = clpModel
+        s = self.clpModel = clpModel
+        init_attr(self, s, prefix, prob_name)
         # Tell IClpSimplex that this pivot rules needs
         #an extra check after the leaving varible is chosen.
         clpModel.useCustomPrimal(True)
@@ -19,9 +21,9 @@ class WolfePivot(PivotPythonBase):
         self.notBanned = self.orgBan.copy()
         self.complementarityList = np.arange(self.dim)
 
-
     def pivotColumn(self, updates, spareRow1, spareRow2, spareCol1, spareCol2):
         self.updateReducedCosts(updates, spareRow1, spareRow2, spareCol1, spareCol2)
+        add_row(self.clpModel, self.path)
         s = self.clpModel
 
         # If objective function linear proceed as normal

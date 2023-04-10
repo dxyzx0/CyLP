@@ -9,6 +9,7 @@ import numpy as np
 from cylp.cy import CyCoinIndexedVector
 from cylp.cy.CyClpSimplex import cydot
 from .PivotPythonBase import PivotPythonBase
+from .utils import add_row, init_attr
 
 
 class PositiveEdgePivot(PivotPythonBase):
@@ -35,9 +36,8 @@ class PositiveEdgePivot(PivotPythonBase):
     2520.57174
 
     '''
-
-    def __init__(self, clpModel, EPSILON=10 ** (-7)):
-        self.clpModel = clpModel
+    def __init__(self, clpModel, prefix, prob_name, EPSILON=10 ** (-7)):
+        s = self.clpModel = clpModel
         self.dim = self.clpModel.nRows + self.clpModel.nCols
 
         self.isDegenerate = False
@@ -52,6 +52,8 @@ class PositiveEdgePivot(PivotPythonBase):
         self.rhs = np.empty(self.clpModel.nRows, dtype=np.double)
         self.EPSILON = EPSILON
         self.lastUpdateIteration = 0
+
+        init_attr(self, s, prefix, prob_name)
 
     def updateP(self):
         '''Finds constraints with abs(rhs) <=  epsilon and put
@@ -99,6 +101,8 @@ class PositiveEdgePivot(PivotPythonBase):
 
     def pivotColumn(self, updates, spareRow1, spareRow2, spareCol1, spareCol2):
         self.updateReducedCosts(updates, spareRow1, spareRow2, spareCol1, spareCol2)
+        add_row(self.clpModel, self.path)
+
         s = self.clpModel
         rc = s.reducedCosts
 

@@ -3,6 +3,7 @@ from operator import itemgetter
 from random import shuffle
 from math import floor
 from .PivotPythonBase import PivotPythonBase
+from .utils import add_row, init_attr
 
 
 class MostFrequentPivot(PivotPythonBase):
@@ -28,17 +29,20 @@ class MostFrequentPivot(PivotPythonBase):
 
     '''
 
-    def __init__(self, clpModel):
+    def __init__(self, clpModel, prefix, prob_name):
         self.dim = clpModel.nRows + clpModel.nCols
-        self.clpModel = clpModel
+        s = self.clpModel = clpModel
         #self.banList = np.zeros(self.dim, np.int)
         self.banList = []
         self.priorityList = list(range(self.dim))
         self.frequencies = np.zeros(self.dim)
 
+        init_attr(self, s, prefix, prob_name)
+
     def pivotColumn(self, updates, spareRow1, spareRow2, spareCol1, spareCol2):
         'Finds the variable with the best reduced cost and returns its index'
         self.updateReducedCosts(updates, spareRow1, spareRow2, spareCol1, spareCol2)
+        add_row(self.clpModel, self.path)
         s = self.clpModel
         rc = s.getReducedCosts()
         dim = s.nRows + s.nCols
