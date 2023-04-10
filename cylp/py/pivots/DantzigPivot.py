@@ -11,6 +11,26 @@ from random import shuffle
 from math import floor
 from .PivotPythonBase import PivotPythonBase
 
+import os
+import pickle
+import pandas as pd
+
+
+def inv_basis_code(c):
+    if c == 0:
+        return 'isFree'
+    elif c == 1:
+        return 'basic'
+    elif c == 2:
+        return 'atUpperBound'
+    elif c == 3:
+        return 'atLowerBound'
+    elif c == 4:
+        return 'superBasic'
+    elif c == 5:
+        return 'isFixed'
+    else:
+        raise ValueError('Invalid basis code')
 
 class DantzigPivot(PivotPythonBase):
     '''
@@ -35,22 +55,64 @@ class DantzigPivot(PivotPythonBase):
 
     '''
 
-    def __init__(self, clpModel):
+    def add_row(self):
+        # add row to dataframes
+        s = self.clpModel
+        i = s.iteration
+
+        if i == 0:
+            # self.basis.to_csv(os.path.join(path, 'basis.csv'), index=False)
+            with open(os.path.join(self.path, 'data.pickle'), 'wb') as f:
+                pickle.dump((self.nCols,
+                             self.nRows,
+                             self.varLower,
+                             self.varUpper,
+                             self.rowLower,
+                             self.rowUpper,
+                             self.c,
+                             self.A
+                             ), f)
+        else:
+            # self.basis.loc[len(self.basis)] = np.concatenate(([i], list(map(inv_basis_code, np.concatenate(s.getBasisStatus())))))
+            stats = pd.DataFrame([[i, s.sequenceIn(), s.getPivotVariable()[s.pivotRow()], s.sumPrimalInfeasibilities,
+                     s.numberPrimalInfeasibilities, s.sumDualInfeasibilities, s.numberDualInfeasibilities]], columns=['iter'] + ['in_var', 'out_var', 'sum_primal_inf', 'n_primal_inf', 'n_dual_inf', 'sum_dual_inf'])
+            # self.stats[len(self.stats)] = stats
+            # rc = pd.DataFrame([np.concatenate(([i], s.reducedCosts))], columns=['iter'] + [f'var_{i}' for i in range(self.nCols)] + [f'slack_{i}' for i in range(self.nCols, self.dim)])
+            stats.to_csv(os.path.join(self.path, 'stats.csv'), mode='a', index=False, header=(i == 0))
+            # rc.to_csv(os.path.join(self.path, 'rc.csv'), mode='a', index=False, header=False)
+
+    def init_attr(self, s, prob_name):
+        self.prob = prob_name
+        self.nCols = s.nCols
+        self.nRows = s.nRows
+        self.varLower = s.variablesLower
+        self.varUpper = s.variablesUpper
+        self.rowLower = s.constraintsLower
+        self.rowUpper = s.constraintsUpper
+        self.c = s.objective
+        self.A = s.coefMatrix
+
+        self.path = "output/{}/{}/".format(self.prob, "p_dantzig")
+        os.makedirs(self.path, exist_ok=True)
+
+        self.stats = {}
+        # self.basis = pd.DataFrame(columns=['iter'] + [f'var_{i}' for i in range(self.nCols)] +[f'slack_{i}' for i in range(self.nCols, self.dim)])
+        self.rc = {}
+
+    def __init__(self, clpModel, prob_name):
         self.dim = clpModel.nRows + clpModel.nCols
         self.clpModel = clpModel
 
+        self.init_attr(self.clpModel, prob_name)
+
     def pivotColumn(self, updates, spareRow1, spareRow2, spareCol1, spareCol2):
         'Finds the variable with the best reduced cost and returns its index'
+        self.add_row()
+
         s = self.clpModel
 
         # Update the reduced costs, for both the original and the slack variables
-        if updates.nElements:
-            s.updateColumnTranspose(spareRow2, updates)
-            s.transposeTimes(-1, updates, spareCol2, spareCol1)
-            s.reducedCosts[s.nVariables:][updates.indices] -= updates.elements[:updates.nElements]
-            s.reducedCosts[:s.nVariables][spareCol1.indices] -= spareCol1.elements[:spareCol1.nElements]
-        updates.clear()
-        spareCol1.clear()
+        self.updateReducedCosts(updates, spareRow1, spareRow2, spareCol1, spareCol2)
 
         rc = s.reducedCosts
         tol = s.dualTolerance
@@ -104,6 +166,6 @@ if __name__ == "__main__":
         from cylp.py.pivots import DantzigPivot
         s = CyClpSimplex()
         s.readMps(sys.argv[1])
-        pivot = DantzigPivot(s)
+        pivot = DantzigPivot(s, sys.argv[1])
         s.setPivotMethod(pivot)
         s.primal()
